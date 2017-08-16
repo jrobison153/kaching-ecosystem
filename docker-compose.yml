@@ -1,0 +1,61 @@
+version: "3"
+networks:
+  internal:
+    driver: overlay
+
+services:
+  decorator:
+    image: decorator
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1024M
+    environment:
+       SPRING_PROFILES: docker
+       TICKER_DB_HOST: mongodb
+       TICKER_DB_PORT: 27017
+       TICKER_DB_NAME: systemintegration
+       PORT: 8081
+    depends_on:
+      - "redis"
+      - "mongodb"
+    networks:
+      - internal
+  hopper:
+    image: hopper
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+    environment:
+      MONGO_CONNECTION_DATABASE: systemintegration
+      MONGO_CONNECTION_HOST: mongodb
+      MONGO_CONNECTION_PORT: 27017
+      HOPPER_REDIS_CONNECTION_HOST: redis
+      HOPPER_REDIS_CONNECTION_PORT: 6379
+      PORT: 8080
+    depends_on:
+      - "redis"
+      - "mongodb"
+    networks:
+      - internal
+  redis:
+      image: redis:alpine
+      networks:
+        - internal
+  mongodb:
+    image: mongo:latest
+    environment:
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/dev/null
+    volumes:
+      - /data/db
+    ports:
+      - 27017
+    networks:
+      - internal
+    command: mongod --smallfiles

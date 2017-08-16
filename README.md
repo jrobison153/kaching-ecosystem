@@ -1,0 +1,1 @@
+This project houses the various ecosystem configurations for Kaching and the necessary scripts and such to deploy them
