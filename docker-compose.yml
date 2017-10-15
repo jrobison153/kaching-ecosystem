@@ -12,6 +12,10 @@ services:
         limits:
           cpus: "1"
           memory: 1024M
+      restart_policy:
+        conditions: any
+        delay: 5s
+        max_attempts: 30
     environment:
        SPRING_PROFILES: docker
        TICKER_DB_HOST: mongodb
@@ -31,6 +35,10 @@ services:
         limits:
           cpus: "1"
           memory: 512M
+      restart_policy:
+        conditions: any
+        delay: 5s
+        max_attempts: 30
     environment:
       MONGO_CONNECTION_DATABASE: systemintegration
       MONGO_CONNECTION_HOST: mongodb
