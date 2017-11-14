@@ -1,0 +1,78 @@
+version: "3"
+networks:
+  internal:
+    driver: overlay
+
+services:
+  decorator:
+    image: decorator
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1024M
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 30
+    environment:
+       SPRING_PROFILES: docker
+       TICKER_DB_HOST: docker.for.mac.localhost
+       TICKER_DB_PORT: 27017
+       TICKER_DB_NAME: testStockData
+       PORT: 8081
+    depends_on:
+      - "redis"
+      - "mongodb"
+    networks:
+      - internal
+  hopper:
+    image: hopper
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 30
+    environment:
+      MONGO_CONNECTION_DATABASE: testStockData
+      MONGO_CONNECTION_HOST: docker.for.mac.localhost
+      MONGO_CONNECTION_PORT: 27017
+      HOPPER_REDIS_CONNECTION_HOST: redis
+      HOPPER_REDIS_CONNECTION_PORT: 6379
+      PORT: 8080
+    depends_on:
+      - "redis"
+    networks:
+      - internal
+  osprey:
+      image: osprey
+      ports:
+        - 8083:8083
+      deploy:
+        replicas: 1
+        resources:
+          limits:
+            cpus: "1"
+            memory: 512M
+        restart_policy:
+          condition: any
+          delay: 5s
+          max_attempts: 30
+      environment:
+        REDIS_HOST: redis
+        REDIS_PORT: 6379
+        PORT: 8083
+      depends_on:
+        - "redis"
+      networks:
+        - internal
+  redis:
+      image: redis:alpine
+      networks:
+        - internal
